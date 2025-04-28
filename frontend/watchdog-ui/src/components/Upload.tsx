@@ -1,8 +1,9 @@
 'use client'
+import React from 'react'
 import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Upload, UploadIcon } from 'lucide-react'
+import { Upload as UploadIcon, UploadIcon as LucideUploadIcon } from 'lucide-react'
 
 interface UploadProps {
   onUploadSuccess: (uploadId: string, fileName: string) => void
@@ -145,7 +146,7 @@ export function Upload({ onUploadSuccess }: UploadProps) {
           onClick={handleButtonClick}
           disabled={isUploading}
         >
-          <Upload className="h-4 w-4 mr-2" />
+          <UploadIcon className="h-4 w-4 mr-2" />
           Select CSV File
         </Button>
       </div>

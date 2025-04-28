@@ -2,7 +2,6 @@
   "compilerOptions": {
     "target": "ES2017",
     "types": [
-      "@cloudflare/workers-types/2023-07-01",
       "node"
     ],
     "lib": [
@@ -31,6 +30,7 @@
         "./src/*"
       ]
     },
+    "baseUrl": "."
   },
   "include": [
     "next-env.d.ts",
