@@ -33,14 +33,30 @@ def load_csv_file(file_path: str) -> pd.DataFrame:
         # Try to infer the delimiter
         with open(file_path, 'r', encoding='utf-8') as f:
             sample = f.read(4096)
+            logger.debug(f"File sample: {sample[:500]}")  # Log first 500 chars
         
         # Count occurrences of common delimiters
         delimiters = [',', ';', '\t', '|']
         counts = {d: sample.count(d) for d in delimiters}
         delimiter = max(counts, key=counts.get)
+        logger.debug(f"Detected delimiter: {repr(delimiter)} (counts: {counts})")
         
         # Load the CSV with the inferred delimiter
         df = pd.read_csv(file_path, delimiter=delimiter)
+        
+        # Log initial data state
+        logger.debug(f"Loaded DataFrame shape: {df.shape}")
+        logger.debug(f"Column names: {df.columns.tolist()}")
+        logger.debug("Column data types:")
+        for col in df.columns:
+            logger.debug(f"{col}: {df[col].dtype}")
+        
+        # Log sample of numeric columns
+        numeric_cols = df.select_dtypes(include=['number']).columns
+        if len(numeric_cols) > 0:
+            logger.debug("Sample of numeric columns:")
+            for col in numeric_cols:
+                logger.debug(f"{col} - min: {df[col].min()}, max: {df[col].max()}, mean: {df[col].mean()}")
         
         # Basic validation
         if df.empty:

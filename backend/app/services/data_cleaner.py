@@ -118,6 +118,10 @@ def clean_monetary_values(series: pd.Series) -> pd.Series:
     Returns:
         Cleaned series as float values
     """
+    logger.debug(f"Cleaning monetary values for column: {series.name}")
+    logger.debug(f"Original data type: {series.dtype}")
+    logger.debug(f"Sample original values: {series.head()}")
+    
     # Convert to string first to handle mixed types
     str_series = series.astype(str)
     
@@ -136,10 +140,16 @@ def clean_monetary_values(series: pd.Series) -> pd.Series:
         try:
             return float(cleaned)
         except ValueError:
+            logger.warning(f"Could not convert value to float: {value}")
             return np.nan
     
     # Apply the cleaning function
-    return str_series.apply(clean_value)
+    result = str_series.apply(clean_value)
+    logger.debug(f"Cleaned data type: {result.dtype}")
+    logger.debug(f"Sample cleaned values: {result.head()}")
+    logger.debug(f"Count of non-null values: {result.count()}")
+    logger.debug(f"Count of zero values: {(result == 0).sum()}")
+    return result
 
 def identify_date_columns(df: pd.DataFrame) -> List[str]:
     """
@@ -204,15 +214,31 @@ def handle_missing_values(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         DataFrame with handled missing values
     """
+    logger.debug("Handling missing values")
+    logger.debug(f"Original DataFrame shape: {df.shape}")
+    logger.debug("Missing value counts by column:")
+    for col in df.columns:
+        missing = df[col].isna().sum()
+        if missing > 0:
+            logger.debug(f"{col}: {missing} missing values")
+    
     # Create a copy to avoid modifying the original
     result = df.copy()
     
     # For numeric columns, replace NaN with 0
     numeric_columns = result.select_dtypes(include=['number']).columns
+    logger.debug(f"Numeric columns: {numeric_columns.tolist()}")
     result[numeric_columns] = result[numeric_columns].fillna(0)
     
     # For string columns, replace NaN with empty string
     string_columns = result.select_dtypes(include=['object']).columns
+    logger.debug(f"String columns: {string_columns.tolist()}")
     result[string_columns] = result[string_columns].fillna('')
+    
+    logger.debug("Missing values after handling:")
+    for col in result.columns:
+        missing = result[col].isna().sum()
+        if missing > 0:
+            logger.debug(f"{col}: {missing} missing values")
     
     return result

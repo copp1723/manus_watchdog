@@ -271,23 +271,41 @@ def get_total_profit(df: pd.DataFrame) -> float:
     """Get the total profit amount."""
     # Look for profit or similar columns
     profit_cols = [col for col in df.columns if 'profit' in col.lower()]
+    logger.debug(f"Found profit columns: {profit_cols}")
+    
     if not profit_cols:
+        logger.warning("No profit columns found in DataFrame")
         return 0.0
     
     # Use the first profit column found
     profit_col = profit_cols[0]
-    return df[profit_col].sum()
+    logger.debug(f"Using profit column: {profit_col}")
+    logger.debug(f"Profit column data types: {df[profit_col].dtype}")
+    logger.debug(f"Profit column unique values: {df[profit_col].unique()}")
+    
+    total = df[profit_col].sum()
+    logger.debug(f"Total profit calculated: {total}")
+    return total
 
 def get_average_profit(df: pd.DataFrame) -> float:
     """Get the average profit per sale."""
     # Look for profit or similar columns
     profit_cols = [col for col in df.columns if 'profit' in col.lower()]
+    logger.debug(f"Found profit columns: {profit_cols}")
+    
     if not profit_cols:
+        logger.warning("No profit columns found in DataFrame")
         return 0.0
     
     # Use the first profit column found
     profit_col = profit_cols[0]
-    return df[profit_col].mean()
+    logger.debug(f"Using profit column: {profit_col}")
+    logger.debug(f"Profit column data types: {df[profit_col].dtype}")
+    logger.debug(f"Profit column non-zero count: {(df[profit_col] != 0).sum()}")
+    
+    avg = df[profit_col].mean()
+    logger.debug(f"Average profit calculated: {avg}")
+    return avg
 
 def get_top_sales_rep(df: pd.DataFrame) -> Optional[Dict[str, Any]]:
     """Get the top performing sales representative by profit."""

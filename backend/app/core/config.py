@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     SESSION_EXPIRY: int = 60 * 60 * 24  # 24 hours
     
     # Logging settings
-    LOG_LEVEL: str = "INFO"
+    LOG_LEVEL: str = "DEBUG"
     
     class Config:
         env_file = ".env"
