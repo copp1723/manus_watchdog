@@ -1,118 +1,36 @@
-# Watchdog AI - Project Documentation
-
-## Overview
-Watchdog AI is a clean, fast, and smart interface for dealership data analysis. It follows a simple workflow:
-1. **Upload** - Users upload dealership CSV files
-2. **Ask** - Users ask questions in natural language
-3. **Insights** - Users get valuable, tangible, and practical insights
-
-## Project Structure
-The project consists of two main components:
-
-### Backend (Python/FastAPI)
-- Data processing and analysis engine
-- RESTful API for file upload, analysis, and question answering
-- Comprehensive data cleaning and insight generation
-
-### Frontend (Next.js)
-- Clean, modern user interface
-- Responsive design for all devices
-- Simple file upload zone
-- Natural language question interface
-- Clear insight cards with actionable recommendations
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
 
-### Prerequisites
-- Python 3.10+
-- Node.js 18+
-- pnpm (for frontend package management)
+First, run the development server:
 
-### Backend Setup
 ```bash
-cd backend
-pip install -r requirements.txt
-python -m app.main
-```
-
-The backend server will start at http://localhost:8000
-
-### Frontend Setup
-```bash
-cd frontend/watchdog-ui
-pnpm install
+npm run dev
+# or
+yarn dev
+# or
 pnpm dev
+# or
+bun dev
 ```
 
-The frontend development server will start at http://localhost:3000
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## API Documentation
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-### Upload Endpoint
-`POST /v1/upload`
-- Accepts CSV files
-- Returns upload ID, filename, and data statistics
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-### Analysis Endpoint
-`POST /v1/analyze/{upload_id}`
-- Analyzes uploaded data based on specified intent
-- Returns insights and optional chart URL
+## Learn More
 
-### Question Endpoint
-`POST /v1/question/{upload_id}`
-- Answers specific questions about the data
-- Returns answer, insights, and optional chart URL
+To learn more about Next.js, take a look at the following resources:
 
-## Features
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-### Data Analysis
-- Sales performance analysis
-- Profit analysis
-- Sales representative performance
-- Lead source effectiveness
-- Vehicle sales analysis
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-### Insights
-- Clear, actionable insights
-- Performance metrics
-- Trend identification
-- Recommendations
+## Deploy on Vercel
 
-### Visualizations
-- Automatically generated charts
-- Visual representation of key metrics
-- Support for various chart types
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-## Testing
-Both backend and frontend include comprehensive test suites:
-
-### Backend Tests
-```bash
-cd backend
-pytest
-```
-
-### Frontend Tests
-```bash
-cd frontend/watchdog-ui
-pnpm test
-```
-
-## Deployment
-The application can be deployed in various environments:
-
-### Backend Deployment
-- Can be deployed as a standalone FastAPI application
-- Supports containerization with Docker
-- Works with various WSGI servers (Uvicorn, Gunicorn)
-
-### Frontend Deployment
-- Static export for simple hosting
-- Supports Vercel, Netlify, and other Next.js-compatible platforms
-- Cloudflare Workers integration for edge deployment
-
-## License
-This project is proprietary and confidential.
-
-## Contact
-For support or inquiries, please contact the development team.
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
