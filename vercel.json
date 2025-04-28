@@ -1,6 +1,4 @@
 {
   "version": 2,
-  "framework": "nextjs",
-  "buildCommand": "cd frontend/watchdog-ui && pnpm install && pnpm run build",
-  "outputDirectory": "frontend/watchdog-ui/.next"
+  "framework": "nextjs"
 } 
