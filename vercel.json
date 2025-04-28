@@ -1,13 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "cd frontend/watchdog-ui && pnpm install && pnpm run build",
-  "installCommand": "cd frontend/watchdog-ui && pnpm install",
   "framework": "nextjs",
-  "outputDirectory": "frontend/watchdog-ui/.next",
-  "builds": [
-    {
-      "src": "frontend/watchdog-ui/package.json",
-      "use": "@vercel/next"
-    }
-  ]
+  "buildCommand": "cd frontend/watchdog-ui && pnpm install && pnpm run build",
+  "outputDirectory": "frontend/watchdog-ui/.next"
 } 
