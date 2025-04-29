@@ -11,11 +11,15 @@ from app.api.routes import router as api_router
 from app.core.config import settings
 
 # Configure logging
+log_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.DEBUG)
 logging.basicConfig(
-    level=logging.INFO,
+    level=log_level,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger("watchdog")
+
+# Add a test debug message to verify logging level
+logger.debug("TEST: Application starting up with DEBUG logging enabled")
 
 # Create FastAPI app
 app = FastAPI(

@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 import uuid
 import os
 from typing import Optional
+import logging
 
 from app.api.models import (
     UploadResponse, 
@@ -22,6 +23,7 @@ from app.services.chart_generator import generate_chart
 from app.core.config import settings
 
 router = APIRouter()
+logger = logging.getLogger("watchdog.api")
 
 # In-memory storage for uploaded files (in production, use a database)
 uploads = {}
@@ -38,15 +40,20 @@ async def upload_file(
     The file will be saved and processed, and an upload ID will be returned
     for use in subsequent analysis requests.
     """
+    logger.debug(f"Received upload request for file: {file.filename}")
+    
     # Validate file type
     if not file.filename.endswith(('.csv', '.CSV')):
+        logger.warning(f"Invalid file type: {file.filename}")
         raise HTTPException(status_code=400, detail="Only CSV files are supported")
     
     # Generate unique ID for this upload
     upload_id = str(uuid.uuid4())
+    logger.debug(f"Generated upload ID: {upload_id}")
     
     # Create file path
     file_path = os.path.join(settings.UPLOAD_DIR, f"{upload_id}.csv")
+    logger.debug(f"Saving file to: {file_path}")
     
     try:
         # Save file
@@ -80,6 +87,7 @@ async def upload_file(
         # Clean up file if there was an error
         if os.path.exists(file_path):
             os.remove(file_path)
+        logger.error(f"Error processing file: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
 
@@ -111,7 +119,7 @@ def process_uploaded_file(upload_id: str):
     
     except Exception as e:
         # Log error but don't raise exception (background task)
-        print(f"Error processing file {upload_id}: {str(e)}")
+        logger.error(f"Error processing file {upload_id}: {str(e)}")
 
 
 @router.post("/analyze/{upload_id}", response_model=AnalysisResponse)
@@ -124,8 +132,11 @@ async def analyze(
     
     Returns insights and optionally a chart URL.
     """
+    logger.debug(f"Received analysis request for upload ID: {upload_id}")
+    
     # Check if upload exists
     if upload_id not in uploads:
+        logger.warning(f"Upload not found: {upload_id}")
         raise HTTPException(status_code=404, detail="Upload not found")
     
     # Get file info
@@ -133,6 +144,7 @@ async def analyze(
     
     # Check if file has been processed
     if not file_info.get("processed", False):
+        logger.warning(f"File {upload_id} is still being processed")
         raise HTTPException(status_code=400, detail="File is still being processed")
     
     try:
@@ -140,7 +152,9 @@ async def analyze(
         df = load_csv_file(file_info["processed_path"])
         
         # Analyze data based on intent
+        logger.debug("Starting data analysis...")
         analysis_results = analyze_data(df, request.intent)
+        logger.debug("Analysis complete")
         
         # Generate insights
         insights = generate_insights(analysis_results, request.intent)
@@ -161,6 +175,7 @@ async def analyze(
         )
     
     except Exception as e:
+        logger.error(f"Error analyzing data: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error analyzing data: {str(e)}")
 
 
@@ -174,8 +189,12 @@ async def ask_question(
     
     Returns an answer, insights, and optionally a chart URL.
     """
+    logger.debug(f"Received question for upload ID: {upload_id}")
+    logger.debug(f"Question: {request.question}")
+    
     # Check if upload exists
     if upload_id not in uploads:
+        logger.warning(f"Upload not found: {upload_id}")
         raise HTTPException(status_code=404, detail="Upload not found")
     
     # Get file info
@@ -183,6 +202,7 @@ async def ask_question(
     
     # Check if file has been processed
     if not file_info.get("processed", False):
+        logger.warning(f"File {upload_id} is still being processed")
         raise HTTPException(status_code=400, detail="File is still being processed")
     
     try:
@@ -190,7 +210,9 @@ async def ask_question(
         df = load_csv_file(file_info["processed_path"])
         
         # Process question and generate answer
+        logger.debug("Generating answer...")
         answer_data = answer_question(df, request.question)
+        logger.debug("Answer generated")
         
         # Generate chart if needed
         chart_url = None
@@ -209,6 +231,7 @@ async def ask_question(
         )
     
     except Exception as e:
+        logger.error(f"Error processing question: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error processing question: {str(e)}")
 
 
