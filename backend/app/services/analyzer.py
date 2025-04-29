@@ -239,24 +239,41 @@ def analyze_vehicles(df: pd.DataFrame) -> Dict[str, Any]:
 
 def get_date_range(df: pd.DataFrame) -> Optional[Dict[str, str]]:
     """Get the date range of the data if date columns exist."""
+    logger.debug("Entering get_date_range function")
     date_columns = [col for col in df.columns if 'date' in col.lower()]
+    logger.debug(f"Found date columns: {date_columns}")
+    
     if not date_columns:
+        logger.debug("No date columns found")
         return None
     
     # Use the first date column found
     date_col = date_columns[0]
+    logger.debug(f"Using date column: {date_col}")
+    logger.debug(f"Sample of date values:\n{df[date_col].head()}")
+    
     try:
+        logger.debug("Attempting to convert dates to datetime")
         dates = pd.to_datetime(df[date_col], errors='coerce')
+        logger.debug(f"Converted dates sample:\n{dates.head()}")
+        
         min_date = dates.min()
         max_date = dates.max()
+        logger.debug(f"Min date: {min_date}, Max date: {max_date}")
+        
         if pd.isna(min_date) or pd.isna(max_date):
+            logger.debug("Found NaT in min or max date")
             return None
-        return {
+            
+        result = {
             "start": min_date.strftime("%Y-%m-%d"),
             "end": max_date.strftime("%Y-%m-%d"),
             "days": (max_date - min_date).days
         }
-    except:
+        logger.debug(f"Returning date range: {result}")
+        return result
+    except Exception as e:
+        logger.error(f"Error in get_date_range: {str(e)}")
         return None
 
 def get_total_sales(df: pd.DataFrame) -> float:

@@ -84,6 +84,7 @@ def identify_monetary_columns(df: pd.DataFrame) -> List[str]:
     Returns:
         List of column names that likely contain monetary values
     """
+    logger.debug("Identifying monetary columns")
     monetary_columns = []
     
     # Common monetary column name patterns
@@ -92,10 +93,35 @@ def identify_monetary_columns(df: pd.DataFrame) -> List[str]:
         'budget', 'payment', 'fee', 'charge', 'amount', 'total'
     ]
     
+    # Common date patterns to exclude
+    date_patterns = [
+        'date', 'day', 'month', 'year', 'time', 'created', 'updated',
+        'timestamp', 'sold', 'purchased', 'closed'
+    ]
+    
     # Check each column
     for column in df.columns:
+        column_lower = column.lower()
+        logger.debug(f"Checking column: {column}")
+        
+        # Skip if column name contains date pattern
+        if any(pattern in column_lower for pattern in date_patterns):
+            logger.debug(f"Skipping {column} as it appears to be a date column")
+            continue
+        
+        # Try to detect if it's a date column by attempting conversion
+        if df[column].dtype == 'object':
+            sample = df[column].dropna().head(10)
+            try:
+                pd.to_datetime(sample)
+                logger.debug(f"Skipping {column} as it contains date values")
+                continue
+            except:
+                pass
+        
         # Check if column name contains monetary pattern
-        if any(pattern in column.lower() for pattern in monetary_patterns):
+        if any(pattern in column_lower for pattern in monetary_patterns):
+            logger.debug(f"Adding {column} based on name pattern")
             monetary_columns.append(column)
             continue
         
@@ -103,9 +129,11 @@ def identify_monetary_columns(df: pd.DataFrame) -> List[str]:
         if df[column].dtype == 'object':
             sample = df[column].dropna().astype(str).head(100)
             if sample.str.contains(r'^\$|\$|\,').any():
+                logger.debug(f"Adding {column} based on value format")
                 monetary_columns.append(column)
                 continue
     
+    logger.debug(f"Identified monetary columns: {monetary_columns}")
     return monetary_columns
 
 def clean_monetary_values(series: pd.Series) -> pd.Series:
@@ -122,9 +150,24 @@ def clean_monetary_values(series: pd.Series) -> pd.Series:
     logger.debug(f"Original data type: {series.dtype}")
     logger.debug(f"Sample original values:\n{series.head()}")
     
+    # First check if this might be a date column
+    if series.dtype == 'object':
+        sample = series.dropna().head(10)
+        try:
+            pd.to_datetime(sample)
+            logger.warning(f"Column {series.name} appears to contain dates, skipping monetary cleaning")
+            return series
+        except:
+            pass
+    
     # Convert to string and remove $ and , characters
     cleaned_series = series.astype(str).str.replace(r'[$,]', '', regex=True)
     logger.debug(f"Series after removing $ and , characters:\n{cleaned_series.head()}")
+    
+    # Try to detect if values look like dates (e.g., contain dashes or slashes)
+    if cleaned_series.str.contains(r'[-/]').any():
+        logger.warning(f"Column {series.name} contains date-like values, skipping monetary cleaning")
+        return series
     
     # Convert to numeric values
     numeric_series = pd.to_numeric(cleaned_series, errors='coerce')
@@ -184,10 +227,20 @@ def clean_dates(series: pd.Series) -> pd.Series:
     Returns:
         Cleaned series as datetime values
     """
+    logger.debug(f"Cleaning dates for column: {series.name}")
+    logger.debug(f"Original data type: {series.dtype}")
+    logger.debug(f"Sample original values:\n{series.head()}")
+    
     try:
         # Try to convert to datetime with automatic format detection
-        return pd.to_datetime(series, errors='coerce')
-    except:
+        cleaned_series = pd.to_datetime(series, errors='coerce')
+        logger.debug(f"Cleaned data type: {cleaned_series.dtype}")
+        logger.debug(f"Sample cleaned values:\n{cleaned_series.head()}")
+        logger.debug(f"Count of non-null values: {cleaned_series.count()}")
+        logger.debug(f"Value distribution:\n{cleaned_series.value_counts().head()}")
+        return cleaned_series
+    except Exception as e:
+        logger.error(f"Error cleaning dates: {str(e)}")
         # If conversion fails, return the original series
         return series
 
