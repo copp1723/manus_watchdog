@@ -22,6 +22,9 @@ def analyze_data(df: pd.DataFrame, intent: str = "general_analysis") -> Dict[str
     Returns:
         Dictionary containing analysis results
     """
+    logger.debug("Entered analyze_data function with intent: %s", intent)
+    logger.debug("Input DataFrame shape: %s", df.shape)
+    logger.debug("Columns found: %s", df.columns.tolist())
     logger.info(f"Analyzing data with intent: {intent}")
     
     # Determine which analysis to run based on intent
@@ -269,6 +272,8 @@ def get_total_sales(df: pd.DataFrame) -> float:
 
 def get_total_profit(df: pd.DataFrame) -> float:
     """Get the total profit amount."""
+    logger.debug("Attempting to find profit column...")
+    
     # Look for profit or similar columns
     profit_cols = [col for col in df.columns if 'profit' in col.lower()]
     logger.debug(f"Found profit columns: {profit_cols}")
@@ -280,8 +285,10 @@ def get_total_profit(df: pd.DataFrame) -> float:
     # Use the first profit column found
     profit_col = profit_cols[0]
     logger.debug(f"Using profit column: {profit_col}")
-    logger.debug(f"Profit column data types: {df[profit_col].dtype}")
+    logger.debug(f"Profit column data type: {df[profit_col].dtype}")
+    logger.debug(f"Profit column non-null count: {df[profit_col].count()}")
     logger.debug(f"Profit column unique values: {df[profit_col].unique()}")
+    logger.debug(f"Profit column value counts:\n{df[profit_col].value_counts().head()}")
     
     total = df[profit_col].sum()
     logger.debug(f"Total profit calculated: {total}")
