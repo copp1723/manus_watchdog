@@ -2,8 +2,6 @@
 
 > A comprehensive dealership analytics and insight generation platform for automotive sales data.
 
-![Manus Watchdog Dashboard](docs/images/dashboard_preview.png)
-
 ## 🚀 Overview
 
 Manus Watchdog is an intelligent analytics platform designed specifically for automotive dealerships. It processes sales data to generate actionable insights and answer business questions through natural language queries. 
