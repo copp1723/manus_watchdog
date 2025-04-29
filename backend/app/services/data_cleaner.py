@@ -86,53 +86,44 @@ def identify_monetary_columns(df: pd.DataFrame) -> List[str]:
     """
     logger.debug("Identifying monetary columns")
     monetary_columns = []
-    
-    # Common monetary column name patterns
+
+    # Refined monetary column name patterns (more specific)
     monetary_patterns = [
-        'price', 'cost', 'revenue', 'sale', 'profit', 'expense', 'gross', 'income',
-        'budget', 'payment', 'fee', 'charge', 'amount', 'total'
+        r'(^|_)price($|_)', r'(^|_)profit($|_)', r'(^|_)gross($|_)', r'(^|_)expense($|_)', r'(^|_)cost($|_)',
+        r'(^|_)revenue($|_)', r'(^|_)sale($|_)', r'(^|_)amount($|_)', r'(^|_)total($|_)', r'(^|_)fee($|_)',
+        r'(^|_)charge($|_)', r'(^|_)budget($|_)', r'(^|_)payment($|_)', r'(^|_)income($|_)'
     ]
-    
-    # Common date patterns to exclude
-    date_patterns = [
-        'date', 'day', 'month', 'year', 'time', 'created', 'updated',
-        'timestamp', 'sold', 'purchased', 'closed'
-    ]
-    
-    # Check each column
+    # Exclude columns with these patterns
+    exclude_patterns = [r'name', r'rep', r'id', r'number']
+
     for column in df.columns:
         column_lower = column.lower()
         logger.debug(f"Checking column: {column}")
-        
-        # Skip if column name contains date pattern
-        if any(pattern in column_lower for pattern in date_patterns):
-            logger.debug(f"Skipping {column} as it appears to be a date column")
+
+        # Skip if column is already numeric
+        if pd.api.types.is_numeric_dtype(df[column]):
+            logger.debug(f"Skipping {column} as it is already numeric")
             continue
-        
-        # Try to detect if it's a date column by attempting conversion
-        if df[column].dtype == 'object':
-            sample = df[column].dropna().head(10)
-            try:
-                pd.to_datetime(sample)
-                logger.debug(f"Skipping {column} as it contains date values")
-                continue
-            except:
-                pass
-        
-        # Check if column name contains monetary pattern
-        if any(pattern in column_lower for pattern in monetary_patterns):
+
+        # Exclude columns with certain patterns
+        if any(re.search(pat, column_lower) for pat in exclude_patterns):
+            logger.debug(f"Skipping {column} due to exclusion pattern")
+            continue
+
+        # Check if column name matches monetary pattern
+        if any(re.search(pat, column_lower) for pat in monetary_patterns):
             logger.debug(f"Adding {column} based on name pattern")
             monetary_columns.append(column)
             continue
-        
+
         # Check if column contains values with dollar signs or commas
         if df[column].dtype == 'object':
             sample = df[column].dropna().astype(str).head(100)
-            if sample.str.contains(r'^\$|\$|\,').any():
+            if sample.str.contains(r'\$|,').any():
                 logger.debug(f"Adding {column} based on value format")
                 monetary_columns.append(column)
                 continue
-    
+
     logger.debug(f"Identified monetary columns: {monetary_columns}")
     return monetary_columns
 
@@ -204,18 +195,39 @@ def identify_date_columns(df: pd.DataFrame) -> List[str]:
 
 def clean_dates(series: pd.Series) -> pd.Series:
     """
-    Clean date values by converting to datetime.
+    Clean date values by converting to datetime, with special handling for certain columns.
     
     Args:
         series: Series to clean
         
     Returns:
-        Cleaned series as datetime values
+        Cleaned series as datetime values, or original/numeric for special cases
     """
+    col_name = series.name.lower() if series.name else ""
     logger.debug(f"Cleaning dates for column: {series.name}")
     logger.debug(f"Original data type: {series.dtype}")
     logger.debug(f"Sample original values:\n{series.head()}")
-    
+
+    # Special case: days_to_close should remain numeric
+    if 'days_to_close' in col_name:
+        logger.debug("Skipping date cleaning for days_to_close (should remain numeric)")
+        return pd.to_numeric(series, errors='coerce')
+
+    # Special case: vehicle_year should be parsed as year only
+    if 'vehicle_year' in col_name:
+        try:
+            cleaned_series = pd.to_datetime(series, format='%Y', errors='coerce')
+            logger.debug(f"Cleaned vehicle_year as datetime: {cleaned_series.head()}")
+            return cleaned_series
+        except Exception as e:
+            logger.error(f"Error cleaning vehicle_year: {str(e)}")
+            return series
+
+    # Do not attempt to clean monetary columns as dates
+    if 'sold_price' in col_name or 'price' in col_name:
+        logger.debug("Skipping date cleaning for price columns")
+        return series
+
     try:
         # Try to convert to datetime with automatic format detection
         cleaned_series = pd.to_datetime(series, errors='coerce')
