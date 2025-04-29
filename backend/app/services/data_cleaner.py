@@ -150,31 +150,16 @@ def clean_monetary_values(series: pd.Series) -> pd.Series:
     logger.debug(f"Original data type: {series.dtype}")
     logger.debug(f"Sample original values:\n{series.head()}")
     
-    # First check if this might be a date column
-    if series.dtype == 'object':
-        sample = series.dropna().head(10)
-        try:
-            pd.to_datetime(sample)
-            logger.warning(f"Column {series.name} appears to contain dates, skipping monetary cleaning")
-            return series
-        except:
-            pass
-    
     # Convert to string and remove $ and , characters
     cleaned_series = series.astype(str).str.replace(r'[$,]', '', regex=True)
     logger.debug(f"Series after removing $ and , characters:\n{cleaned_series.head()}")
     
-    # Try to detect if values look like dates (e.g., contain dashes or slashes)
-    if cleaned_series.str.contains(r'[-/]').any():
-        logger.warning(f"Column {series.name} contains date-like values, skipping monetary cleaning")
-        return series
-    
     # Convert to numeric values
     numeric_series = pd.to_numeric(cleaned_series, errors='coerce')
+    logger.debug(f"Column '{series.name}' dtype after cleaning: {numeric_series.dtype}")
     logger.debug(f"Monetary values after cleaning attempt (Head):\n{numeric_series.head()}")
     
     # Log additional diagnostics
-    logger.debug(f"Cleaned data type: {numeric_series.dtype}")
     logger.debug(f"Count of non-null values: {numeric_series.count()}")
     logger.debug(f"Count of zero values: {(numeric_series == 0).sum()}")
     logger.debug(f"Value distribution:\n{numeric_series.value_counts().head()}")
