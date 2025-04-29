@@ -120,36 +120,23 @@ def clean_monetary_values(series: pd.Series) -> pd.Series:
     """
     logger.debug(f"Cleaning monetary values for column: {series.name}")
     logger.debug(f"Original data type: {series.dtype}")
-    logger.debug(f"Sample original values: {series.head()}")
+    logger.debug(f"Sample original values:\n{series.head()}")
     
-    # Convert to string first to handle mixed types
-    str_series = series.astype(str)
+    # Convert to string and remove $ and , characters
+    cleaned_series = series.astype(str).str.replace(r'[$,]', '', regex=True)
+    logger.debug(f"Series after removing $ and , characters:\n{cleaned_series.head()}")
     
-    # Function to clean individual values
-    def clean_value(value):
-        if pd.isna(value):
-            return np.nan
-        
-        # Remove currency symbols, commas, and whitespace
-        cleaned = re.sub(r'[$,\s]', '', str(value))
-        
-        # Handle empty strings
-        if not cleaned:
-            return np.nan
-        
-        try:
-            return float(cleaned)
-        except ValueError:
-            logger.warning(f"Could not convert value to float: {value}")
-            return np.nan
+    # Convert to numeric values
+    numeric_series = pd.to_numeric(cleaned_series, errors='coerce')
+    logger.debug(f"Monetary values after cleaning attempt (Head):\n{numeric_series.head()}")
     
-    # Apply the cleaning function
-    result = str_series.apply(clean_value)
-    logger.debug(f"Cleaned data type: {result.dtype}")
-    logger.debug(f"Sample cleaned values: {result.head()}")
-    logger.debug(f"Count of non-null values: {result.count()}")
-    logger.debug(f"Count of zero values: {(result == 0).sum()}")
-    return result
+    # Log additional diagnostics
+    logger.debug(f"Cleaned data type: {numeric_series.dtype}")
+    logger.debug(f"Count of non-null values: {numeric_series.count()}")
+    logger.debug(f"Count of zero values: {(numeric_series == 0).sum()}")
+    logger.debug(f"Value distribution:\n{numeric_series.value_counts().head()}")
+    
+    return numeric_series
 
 def identify_date_columns(df: pd.DataFrame) -> List[str]:
     """
