@@ -22,7 +22,21 @@ app = FastAPI(
     title="Watchdog AI",
     description="API for dealership data analysis and insights",
     version="1.0.0",
-)
+)  # type: ignore
+# Add global exception handlers to ensure all errors (including Pydantic validation) are logged with tracebacks
+from fastapi.exceptions import RequestValidationError
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):  # noqa: F811
+    logger.exception(f"Request validation error: {exc}")
+    return JSONResponse(status_code=422, content={"detail": exc.errors()})
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):  # noqa: F811
+    logger.exception(f"Unhandled exception: {exc}")
+    return JSONResponse(status_code=500, content={"detail": str(exc)})
 
 # Configure CORS
 app.add_middleware(
